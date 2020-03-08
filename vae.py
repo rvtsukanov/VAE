@@ -9,11 +9,15 @@ from torch.distributions.normal import Normal
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 import re
+from metasaver import MetaSaver
 
 
-class VAE(nn.Module):
-    def __init__(self, num_epochs, dim_z, train_set, postfix='VAE'):
+class VAE(nn.Module, MetaSaver):
+    def __init__(self, num_epochs, dim_z, train_set, postfix, base_directory):
         super(VAE, self).__init__()
+        MetaSaver.__init__(self, base_directory=base_directory, postfix=postfix)
+
+        # super(MetaSaver, self).__init__(base_directory, postfix)
 
         self.postfix = postfix
 
@@ -81,26 +85,13 @@ class VAE(nn.Module):
 
 
     def loss_vae(self, x, mu_gen, logsigma_gen, mu_z, logsigma_z):
-        # print('x', x)
-        # print('mu', mu_gen[0])
         return self.kl(mu_z, logsigma_z) + self.reconstruction_loss(mu_gen, x)
 
     def set_postfix(self, new_postfix):
         self.postfix = new_postfix
 
-
-    def generate_name_dir(self, postfix=None, time=None):
-        if not time:
-            now = datetime.datetime.now()
-        else:
-            now = time
-        if postfix is None:
-            self.postfix = 'VAE'  # TODO: add hashing
-        return now.strftime('%d-%m-%Y--%H-%M-%S') + f'--{self.postfix}'
-
-
     def run(self):
-        self.name_dir = self.generate_name_dir()
+        # self.name_dir = self.generate_name_dir()
         self.train_loss_epoch = []
         for epoch in range(self.num_epochs):
             # self.train() #TODO: rename
@@ -137,27 +128,6 @@ class VAE(nn.Module):
         torch.save(self.state_dict(), f'{self.name_dir}/model')
         return self
 
-
-    def load_model(self, dir, ):
-        if dir == 'last':
-            date_names = []
-            for name in os.listdir('./'):
-                try:
-                    # Дешево но что поделать
-                    parsed_name = re.findall(r'\d{2}-\d{2}-\d{4}--\d{2}-\d{2}-\d{2}', name)
-                    if parsed_name:
-                        date_names.append(datetime.datetime.strptime(parsed_name[0], '%d-%m-%Y--%H-%M-%S'))
-
-                except ValueError as e:
-                    print(f'Name: {name} was not properly parsed. Error: {e}')
-
-
-            dir = sorted(date_names, reverse=True)[0]
-
-            print(f'Found maximum: {dir}, proceeding')
-
-        self.load_state_dict(torch.load(os.path.join('.', self.generate_name_dir(self.postfix, time=dir), 'model')))
-        return self
 
 
     def load_loss(self, dir):

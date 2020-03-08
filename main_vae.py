@@ -10,11 +10,13 @@ regressor = xgboost.XGBRegressor()
 regressor.load_model('./xgb_reg')
 
 train_set = pd.read_csv("./X_train.csv")
+model = VAE(1200, dim_z=8, train_set=train_set)#.load_model("last")
+
+print(type(model))
 y = pd.read_csv('./Y_train.csv')['Температура']
 
 print(f'max y: {y.max()} min y: {y.min()}')
 
-model = VAE(1200, dim_z=8, train_set=train_set).load_model("last")
 
 # model.run().save_model().save_loss()
 

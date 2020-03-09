@@ -1,4 +1,4 @@
-#Variational Autoencoders
+# Variational Autoencoders
 
 В данном проекте реализован [вариационный автоэнкодер](https://arxiv.org/abs/1312.6114). 
 
@@ -13,8 +13,8 @@
 
 Пример использования:
 
-> ```vae = VAE(num_epochs=10, dim_z=8, train_set=some_dataset, postfix='test', base_directory='./experiments')```
-> ```vae.run_experiment(['train_loss_epoch']).load_model('last').generate_from_noise(some_data)```       
+- ```vae = VAE(num_epochs=10, dim_z=8, train_set=some_dataset, postfix='test', base_directory='./experiments')```
+- ```vae.run_experiment(['train_loss_epoch']).load_model('last').generate_from_noise(some_data)```       
 
 ##Docker 
 Для воспроизводимости эксперимента, весь код подготовлен к запуску внутри Docker-контейнера.

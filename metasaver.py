@@ -1,10 +1,10 @@
 import datetime
 from typing import List, Union, Tuple, Any
 import os
-import torch
+from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 import re
-from sys import stdout
+import torch
 import logging
 
 
@@ -37,9 +37,16 @@ class MetaSaver:
         :param kwargs: arguments used to pass to the wrapped method
         :return: result of applying wrapper-function
         '''
-        if hasattr(self, wrapper):
+        self.name_dir = self._generate_name_dir()
+        self.full_path = os.path.join(self.base_directory, self.name_dir)
+        if not os.path.exists(self.full_path):
+            os.makedirs(os.path.join(self.base_directory, self.name_dir))
 
-            self.name_dir = self._generate_name_dir()
+        self._init_inner_logger(path=self.full_path)
+        self.logger_inner.info('Initializing inner log')
+
+        if hasattr(self, wrapper):
+            self._init_summary_writer(os.path.join(self.base_directory, self.name_dir))
             logging.basicConfig(filename=os.path.join(self.base_directory, self.name_dir, f'{__name__}.log'),
                                 level=logging.INFO,
                                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -75,7 +82,7 @@ class MetaSaver:
         return now.strftime('%d-%m-%Y--%H-%M-%S') + f'--{postfix}'
 
 
-    def _init_inner_logger(self, path):
+    def _init_inner_logger(self):
         handler = logging.FileHandler(os.path.join(self.base_directory, self.name_dir,
                                                    f'{__name__}.log'))
         formatter = logging.Formatter('"%(asctime)s - %(levelname)s - %(message)s"',
@@ -90,18 +97,12 @@ class MetaSaver:
         Method to save attribute
         :param attribute: str, attribute to save
         '''
-        full_path = os.path.join(self.base_directory, self.name_dir)
-        if not os.path.exists(full_path):
-            os.makedirs(os.path.join(self.base_directory, self.name_dir))
-
-        self._init_inner_logger(path=full_path)
-        self.logger_inner.info('Initializing inner log')
 
         if isinstance(self.__getattribute__(attribute), np.ndarray) or \
                 isinstance(self.__getattribute__(attribute), list):
             self.logger_inner.info(f'Saving attribute {attribute}')
             try:
-                np.save(os.path.join(full_path, attribute), np.array(attribute))
+                np.save(os.path.join(self.full_path, attribute), np.array(attribute))
             except Exception as e:
                 self.logger_inner.error(f'Saving attribute {attribute} was not successfull. Error: {e}')
 
@@ -110,7 +111,7 @@ class MetaSaver:
         if hasattr(self, 'state_dict'):
             self.logger.info('Saving model')
             try:
-                torch.save(self.state_dict(), os.path.join(full_path, 'model'))
+                torch.save(self.state_dict(), os.path.join(self.full_path, 'model'))
             except Exception as e:
                 self.logger_inner.error(f'Saving model was not successfull. Error: {e}')
             else:
@@ -147,6 +148,10 @@ class MetaSaver:
 
         self.load_state_dict(torch.load(os.path.join('.', self._generate_name_dir(self.postfix, time=dir), 'model')))
         return self
+
+    def _init_summary_writer(self, log_dir, **kwargs):
+        self.writer = SummaryWriter(log_dir=log_dir, **kwargs)
+
 
 
 

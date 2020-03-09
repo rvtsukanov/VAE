@@ -16,7 +16,7 @@
 - ```vae = VAE(num_epochs=10, dim_z=8, train_set=some_dataset, postfix='test', base_directory='./experiments')```
 - ```vae.run_experiment(['train_loss_epoch']).load_model('last').generate_from_noise(some_data)```       
 
-##Docker 
+## Docker 
 Для воспроизводимости эксперимента, весь код подготовлен к запуску внутри Docker-контейнера.
 Для сборки образа необходимо выполнить:
 ```docker build -t vae .```
@@ -28,5 +28,5 @@
 Файл ```X_train.csv``` с тренировочными данными необходимо положить в текущую директорию.
 
 
-##Tensorboard
+## Tensorboard
 Для удобства отслеживания метрик во время обучения, некоторые парамеры обучения (в частности, reconstruction loss), доступны в [дэшборде](localhost:6006).   

@@ -60,7 +60,7 @@ class MetaSaver:
                 else:
                     self.logger.error(f'{attr} is not an attribute of {self}. Not saved')
 
-            return result
+            return self
 
         else:
             self.logger.error(f'{attr} is not an attribute of {self}')

@@ -42,7 +42,7 @@ class MetaSaver:
         if not os.path.exists(self.full_path):
             os.makedirs(os.path.join(self.base_directory, self.name_dir))
 
-        self._init_inner_logger(path=self.full_path)
+        self._init_inner_logger()
         self.logger_inner.info('Initializing inner log')
 
         if hasattr(self, wrapper):
@@ -133,7 +133,7 @@ class MetaSaver:
 
         if dir == 'last':
             date_names = []
-            for name in os.listdir('./'):
+            for name in os.listdir(self.base_directory):
                 try:
                     parsed_name = re.findall(r'\d{2}-\d{2}-\d{4}--\d{2}-\d{2}-\d{2}', name)
                     if parsed_name:
@@ -146,7 +146,7 @@ class MetaSaver:
             dir = sorted(date_names, reverse=True)[0]
             self.logger.info(f'{dir} is the last model found. Proceeding')
 
-        self.load_state_dict(torch.load(os.path.join('.', self._generate_name_dir(self.postfix, time=dir), 'model')))
+        self.load_state_dict(torch.load(os.path.join(self.base_directory, self._generate_name_dir(self.postfix, time=dir), 'model')))
         return self
 
     def _init_summary_writer(self, log_dir, **kwargs):

@@ -8,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from metasaver import MetaSaver
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.neighbors import KDTree
 
 
 class VAE(nn.Module, MetaSaver):
@@ -172,7 +173,7 @@ class VAE(nn.Module, MetaSaver):
         return self
 
     def generate_from_noise(self, batch_of_input_data: pd.DataFrame,
-                            num_of_sampled: int):
+                            num_of_sampled: int, transform=True):
         '''
         1. Computing latent alignment for points in batch_of_input_data P(z | X)
         2. Sampling "num_of_sampled" points from P(z | X)
@@ -180,13 +181,78 @@ class VAE(nn.Module, MetaSaver):
         :return: reconstructed num_of_sampled points in original space,
         reconstructed num_of_sampled points in normalized space
         '''
-        input_data_scaled = torch.Tensor(self.scaler.transform(batch_of_input_data))
+        if transform:
+            input_data_scaled = torch.Tensor(self.scaler.transform(batch_of_input_data))
+
+        else:
+            input_data_scaled = torch.Tensor(batch_of_input_data)
+
         latent_mu, latent_logsigma = self.encode(input_data_scaled)
 
         dist = Normal(loc=latent_mu, scale=latent_logsigma.exp())
         sampled = dist.sample(torch.Size([num_of_sampled]))
 
+        # print(sampled)
+        # print(sampled.shape)
+        # print(self.decode(sampled))
+
         return (
             self.scaler.inverse_transform(self.decode(sampled)[0].detach().numpy()),
             self.decode(sampled),
         )
+
+
+    def scale_dataframe(self, X=None):
+        if X is None:
+            return self.scaler.transform(X)
+        else:
+            return self.train_set_scaled
+
+
+    def cut_one_point(self, X):
+        # print(X.index)
+        # print(X.shape)
+
+        idx = np.random.choice(X.index, 1, replace=False)
+        # print('idx', idx)
+
+        return X.loc[idx], X.drop(index=idx)
+
+
+
+    def find_n_nearest_point(self, fixed_points, query_points, n, smooth_latent=True, method=''):
+
+        avaliable_methods = ['knn', 'kdtree']
+        if method not in avaliable_methods:
+            raise AttributeError(f'Method should be in {avaliable_methods}')
+
+        if method == 'kdtree':
+            kd = KDTree(fixed_points)
+            set_of_nearest_points = kd.query(query_points, n, return_distance=False)
+
+            return fixed_points.iloc[set_of_nearest_points[0]] #KD returns ordered indeces
+
+        else:
+            raise NotImplementedError('KNN is not implemented yet')
+
+
+    # def
+
+
+    def build_aligments(self, set_of_nearest_points, num_of_sampled=1000): # dim: [neighbours, hidden]
+        latent_mu, latent_logsigma = self.encode(torch.Tensor(set_of_nearest_points))
+
+        dist = Normal(loc=latent_mu, scale=latent_logsigma.exp())
+
+        sampled = dist.sample(torch.Size([num_of_sampled]))
+
+
+
+        pass
+
+
+
+
+        #KNN? KD TREE
+
+

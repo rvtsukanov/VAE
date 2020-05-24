@@ -1,7 +1,7 @@
 import datetime
 from typing import List, Union, Tuple, Any
 import os
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 import re
 import torch
@@ -150,7 +150,8 @@ class MetaSaver:
         return self
 
     def _init_summary_writer(self, log_dir, **kwargs):
-        self.writer = SummaryWriter(log_dir=log_dir, **kwargs)
+        pass
+        # self.writer = SummaryWriter(log_dir=log_dir, **kwargs)
 
 
 
